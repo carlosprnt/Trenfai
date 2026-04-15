@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Trenfai",
+    "slug": "trenfai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "trenfai",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trenfai.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Trenfai usa tu ubicación para centrar el mapa en tu zona, pero no la comparte con ningún servidor."
+      }
+    },
+    "android": {
+      "package": "com.trenfai.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b1220"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0b1220",
+          "image": "./assets/splash.png",
+          "resizeMode": "contain"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
