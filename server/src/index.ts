@@ -13,6 +13,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { TtlCache } from "./cache.js";
+import { previewHtml } from "./preview.js";
+import { getDemoTrains } from "./providers/demoData.js";
 import { RenfeLongDistanceProvider } from "./providers/renfeLongDistance.js";
 import type { ApiError, LiveTrain, TrainDetail } from "./types.js";
 
@@ -23,15 +25,24 @@ const FLOTA_URL =
   "https://tiempo-real.largorecorrido.renfe.com/data/flotaLD.json";
 const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS ?? 10_000);
 const USER_AGENT = process.env.UPSTREAM_USER_AGENT ?? "Trenfai/0.1";
+const DEMO_MODE = process.env.DEMO_MODE === "true";
 
 const renfe = new RenfeLongDistanceProvider({
   flotaUrl: FLOTA_URL,
   userAgent: USER_AGENT,
 });
 
-const fleetCache = new TtlCache<LiveTrain[]>(CACHE_TTL_MS, () =>
-  renfe.fetchLiveTrains(),
-);
+async function loadTrains(): Promise<LiveTrain[]> {
+  if (DEMO_MODE) return getDemoTrains();
+  try {
+    return await renfe.fetchLiveTrains();
+  } catch (err) {
+    console.warn("[upstream] Falling back to demo data:", err instanceof Error ? err.message : err);
+    return getDemoTrains();
+  }
+}
+
+const fleetCache = new TtlCache<LiveTrain[]>(CACHE_TTL_MS, loadTrains);
 
 const app = new Hono();
 
@@ -43,6 +54,8 @@ app.use(
     allowMethods: ["GET", "OPTIONS"],
   }),
 );
+
+app.get("/", (c) => c.html(previewHtml(`http://localhost:${PORT}`)));
 
 app.get("/health", (c) =>
   c.json({ ok: true, service: "trenfai-server", time: new Date().toISOString() }),
